@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - SLIIT</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Palette inspired by the glassmorphism reference */
+        var(--bg-base): #f8fafc;
+            --brand-primary: #4f46e5;
+            --brand-primary-rgb: 79, 70, 229;
+            --brand-accent: #7c3aed;
+            --brand-navy: #0f172a;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+
+            /* Glassmorphism system */
+            --glass-card: rgba(255, 255, 255, 0.65);
+            --glass-card-hover: rgba(255, 255, 255, 0.88);
+            --glass-border: rgba(255, 255, 255, 0.85);
+            --glass-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.08), 0 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Ambient glowing background orbs */
+        .ambient-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.45;
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.1) 70%, transparent 100%);
+            top: -150px; right: -100px;
+            animation-duration: 22s;
+        }
+
+        .orb-2 {
+            width: 550px; height: 550px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, rgba(124, 58, 237, 0.1) 70%, transparent 100%);
+            top: 30%; left: -150px;
+            animation-duration: 26s;
+            animation-delay: -5s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, 30px) scale(1.08); }
+            100% { transform: translate(-30px, 50px) scale(0.95); }
+        }
+
+        /* Glass Surface Utility */
+        .glass-panel {
+            background: var(--glass-card) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: var(--glass-shadow);
+            border-radius: 22px;
+        }
+
+        /* Modern Frosted Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+            padding: 12px 0;
+            z-index: 1050;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--brand-navy) !important;
+            letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .brand-icon-wrapper {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.4);
+            color: #fff; margin-right: 12px;
+        }
+
+        .nav-link {
+            font-weight: 600; color: #475569 !important;
+            transition: all 0.25s ease; border-radius: 10px; padding: 8px 16px !important;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #10b981 !important; background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* Stat Cards Styling */
+        .stat-card { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: var(--glass-shadow-hover); background: var(--glass-card-hover) !important; }
+        .card-number { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+
+        /* Profile Dropdown Trigger */
+        .profile-wrapper {
+            background: rgba(255,255,255,0.8); border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 5px 15px 5px 5px; border-radius: 50px; cursor: pointer; transition: all 0.2s;
+        }
+        .profile-wrapper:hover { background: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); }
+        .profile-circle {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        /* Primary Action Buttons */
+        .btn-custom-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none; font-weight: 700; padding: 10px 24px; border-radius: 12px;
+            color: #ffffff !important; box-shadow: 0 8px 20px -5px rgba(16, 185, 129, 0.45);
+            transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-custom-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(16, 185, 129, 0.55);
+        }
+
+        /* Chat bubble style for popup */
+        .reply-bubble {
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
+            border-left: 4px solid #10b981; border-top: 1px solid rgba(255,255,255,0.8); border-right: 1px solid rgba(255,255,255,0.8); border-bottom: 1px solid rgba(255,255,255,0.8);
+            padding: 14px; margin-bottom: 12px; border-radius: 10px; font-size: 0.9rem; white-space: pre-line; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        /* Table Styling */
+        .table-transparent { --bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.4); }
+        .table-transparent th { border-bottom: 2px solid rgba(16, 185, 129, 0.1); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem;}
+        .table-transparent td { border-bottom: 1px solid rgba(255,255,255,0.5); vertical-align: middle; }
+        .badge-soft { padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; }
+
+        /* Modal Glass Styling */
+        .modal-content.glass-panel { background: rgba(255, 255, 255, 0.85) !important; }
+
+        /* Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+
+<!-- Ambient Glowing Orbs Background -->
+<div class="ambient-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+</div>
+
+<!-- 1. Top Glass Header (Brand & Navigation) -->
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/staff/dashboard}">
+            <div class="brand-icon-wrapper">
+                <i class="bi bi-headset fs-5"></i>
+            </div>
+            <span>Staff <span class="fw-light text-muted">|</span> Portal</span>
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="bi bi-list fs-1 text-dark"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4 align-items-lg-center">
+                <li class="nav-item me-1"><a class="nav-link active" th:href="@{/staff/dashboard}"><i class="bi bi-speedometer2 me-1"></i> Dashboard & Tickets</a></li>
+                <li class="nav-item me-1"><a class="nav-link" th:href="@{/appointment/staffList}"><i class="bi bi-calendar-event me-1"></i> Manage Appointments</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                <div class="d-flex align-items-center profile-wrapper" data-bs-toggle="modal" data-bs-target="#profileModal">
+                    <div class="profile-circle me-2"><i class="bi bi-person"></i></div>
+                    <div class="d-flex flex-column lh-1">
+                        <span class="small fw-bold text-dark" th:text="${session.loggedUser.fullName}"></span>
+                        <span class="text-muted" style="font-size: 0.7rem; font-weight: 700;" th:text="${session.loggedUser.role}"></span>
+                    </div>
+                </div>
+                <a th:href="@{/logout}" class="btn btn-sm btn-outline-danger fw-bold rounded-3 px-3"><i class="bi bi-box-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 3. Main Content Area -->
+<div class="container-fluid p-4 p-md-5 position-relative z-1">
+
+    <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show glass-panel animate-fade-up" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Failed!</strong> The Old Password you entered is incorrect.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Page Header & Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 animate-fade-up">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -1px;">Student Support Tickets</h3>
+            <p class="text-muted small mb-0">Review submitted campus issues, append replies, and moderate spam.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/staff/dashboard}" class="btn btn-light fw-semibold rounded-pill px-4 shadow-sm border glass-panel" style="background: rgba(255,255,255,0.5);"><i class="bi bi-arrow-clockwise me-1"></i> Refresh List</a>
+        </div>
+    </div>
+
+    <!-- Stat Cards Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-sm-6 col-xl-3 animate-fade-up delay-1">
+            <div class="card stat-card glass-panel p-4 h-100 border-0">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="text-uppercase mb-0 mt-1 fw-bold text-muted" style="font-size: 0.8rem;">Open Tickets</h6>
+                    <div class="p-2 rounded-3" style="background: rgba(245, 158, 11, 0.1);"><i class="bi bi-envelope-open-fill fs-5 text-warning"></i></div>
+                </div>
+                <h1 class="card-number text-warning mb-0" th:text="${openCount}"></h1>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3 animate-fade-up delay-1">
+            <div class="card stat-card glass-panel p-4 h-100 border-0">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="text-uppercase mb-0 mt-1 fw-bold text-muted" style="font-size: 0.8rem;">In Progress</h6>
+                    <div class="p-2 rounded-3" style="background: rgba(14, 165, 233, 0.1);"><i class="bi bi-gear-fill fs-5 text-info"></i></div>
+                </div>
+                <h1 class="card-number text-primary mb-0" th:text="${progressCount}"></h1>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3 animate-fade-up delay-2">
+            <div class="card stat-card glass-panel p-4 h-100 border-0">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="text-uppercase mb-0 mt-1 fw-bold text-muted" style="font-size: 0.8rem;">Resolved Tickets</h6>
+                    <div class="p-2 rounded-3" style="background: rgba(16, 185, 129, 0.1);"><i class="bi bi-check-circle-fill fs-5 text-success"></i></div>
+                </div>
+                <h1 class="card-number text-success mb-0" th:text="${resolvedCount}"></h1>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3 animate-fade-up delay-2">
+            <div class="card stat-card glass-panel p-4 h-100 border-0">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 class="text-uppercase mb-0 mt-1 fw-bold text-muted" style="font-size: 0.8rem;">Critical (Pending)</h6>
+                    <div class="p-2 rounded-3" style="background: rgba(239, 68, 68, 0.1);"><i class="bi bi-exclamation-octagon-fill fs-5 text-danger"></i></div>
+                </div>
+                <h1 class="card-number text-danger mb-0" th:text="${criticalCount}"></h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Area -->
+    <div class="animate-fade-up delay-3">
+        <h6 class="text-muted small fw-bold text-uppercase mb-3">System Overview</h6>
+        <div class="card stat-card glass-panel p-4 border-0">
+            <div class="d-flex align-items-center mb-4">
+                <div class="p-2 rounded-4 me-3" style="background: rgba(16, 185, 129, 0.1);">
+                    <i class="bi bi-list-check text-success fs-4"></i>
+                </div>
+                <h5 class="fw-bold mb-0 text-dark">All Student Submitted Requests</h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-transparent align-middle border-top">
+                    <thead class="table-light text-muted small" style="background: transparent;">
+                    <tr>
+                        <th class="py-3 bg-transparent" style="width: 6%;">ID</th>
+                        <th class="py-3 bg-transparent" style="width: 25%;">Issue Title & Details</th>
+                        <th class="py-3 bg-transparent" style="width: 12%;">Category</th>
+                        <th class="py-3 bg-transparent" style="width: 10%;">Priority</th>
+                        <th class="py-3 bg-transparent" style="width: 12%;">Status</th>
+                        <th class="py-3 bg-transparent" style="width: 13%;">Submitted Date</th>
+                        <th class="py-3 bg-transparent" style="width: 22%;">Staff Action & Moderation</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${ticketList}">
+                        <td class="fw-bold text-muted bg-transparent">#<span th:text="${t.ticketId}"></span></td>
+                        <td class="bg-transparent">
+                            <strong class="text-dark d-block fw-medium" th:text="${t.title}"></strong>
+                            <small class="text-muted d-block text-truncate mt-1" style="max-width: 280px;" th:text="${t.description}"></small>
+                            <span class="badge badge-soft mt-2 text-decoration-none" style="background: rgba(14,165,233,0.15); color: #0ea5e9;">
+                                <i class="bi bi-person me-1"></i>Student ID: <span th:text="${t.studentUniversityId}"></span>
+                            </span>
+                        </td>
+                        <td class="bg-transparent">
+                            <span class="badge badge-soft" style="background: rgba(100,116,139,0.15); color: #64748b;" th:text="${t.categoryName}"></span>
+                        </td>
+                        <td class="bg-transparent">
+                            <span class="badge badge-soft"
+                                  th:style="${t.priority == 'CRITICAL' ? 'background: rgba(239,68,68,0.15); color: #ef4444;' : (t.priority == 'HIGH' ? 'background: rgba(245,158,11,0.15); color: #d97706;' : 'background: rgba(14,165,233,0.15); color: #0ea5e9;')}"
+                                  th:text="${t.priority}">
+                            </span>
+                        </td>
+                        <td class="bg-transparent">
+                            <span class="badge badge-soft fs-6"
+                                  th:style="${(t.status == 'RESOLVED' or t.status == 'CLOSED') ? 'background: rgba(16,185,129,0.15); color: #059669;' : (t.status == 'IN_PROGRESS' ? 'background: rgba(79,70,229,0.15); color: #4f46e5;' : 'background: rgba(245,158,11,0.15); color: #d97706;')}"
+                                  th:text="${t.status}">
+                            </span>
+                        </td>
+                        <td class="small text-muted bg-transparent" th:text="${#dates.format(t.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td class="bg-transparent">
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <a th:if="${t.status == 'OPEN'}" th:href="@{/staff/updateStatus(id=${t.ticketId}, status='IN_PROGRESS')}"
+                                   class="btn btn-sm rounded-3 fw-semibold border shadow-sm" style="background: rgba(255,255,255,0.6); color: #4f46e5; border-color: rgba(79,70,229,0.2);" title="Accept & Start Working">
+                                    <i class="bi bi-play-fill"></i> Accept
+                                </a>
+
+                                <!-- Unified View Details & Reply Button -->
+                                <button type="button" class="btn btn-sm rounded-3 fw-bold border shadow-sm"
+                                        style="background: #10b981; color: white; border-color: #059669;"
+                                        th:data-ticket-id="${t.ticketId}"
+                                        th:data-title="${t.title}"
+                                        th:data-desc="${t.description}"
+                                        th:data-student="${t.studentUniversityId}"
+                                        th:data-cat="${t.categoryName}"
+                                        th:data-priority="${t.priority}"
+                                        th:data-status="${t.status}"
+                                        th:data-date="${#dates.format(t.createdAt, 'yyyy-MM-dd HH:mm')}"
+                                        th:data-doc-id="${t.attachedDocId}"
+                                        th:data-history="${t.staffResponse}"
+                                        onclick="openTicketDetailsModal(this)"
+                                        title="View Full Details & Reply">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> View & Reply
+                                </button>
+
+                                <a th:if="${t.status == 'OPEN'}" th:href="@{/staff/deleteSpam(id=${t.ticketId})}"
+                                   class="btn btn-sm rounded-3 fw-semibold border shadow-sm" style="background: rgba(255,255,255,0.6); color: #ef4444; border-color: rgba(239,68,68,0.2);" onclick="return confirm('Are you sure you want to permanently delete this Ticket as Spam?');" title="Delete Spam Ticket">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(ticketList)}">
+                        <td colspan="7" class="text-center py-5 bg-transparent">
+                            <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                                <i class="bi bi-inbox text-secondary opacity-50 mb-3" style="font-size: 3rem;"></i>
+                                <h6 class="text-dark fw-semibold">No support tickets found in the system right now.</h6>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- UNIFIED TICKET DETAILS & REPLY MODAL -->
+<div class="modal fade" id="ticketDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content glass-panel border-success">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-ticket-detailed-fill me-2 text-success"></i>Ticket Details & Moderation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-4">
+                <div class="row">
+                    <!-- LEFT COLUMN: Ticket Details & History -->
+                    <div class="col-lg-7 border-end pe-lg-4 border-secondary border-opacity-25">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge badge-soft border rounded-pill mb-2 px-3 py-1" style="background: rgba(100,116,139,0.15); color: #64748b;" id="dtCat"></span>
+                                <span class="badge rounded-pill ms-1 px-3 py-1" id="dtPriority"></span>
+                                <h5 class="fw-bold text-dark mb-1 mt-2" id="dtTitle"></h5>
+                                <div class="small text-muted fw-medium"><i class="bi bi-person me-1"></i>Student ID: <span id="dtStudent" class="fw-bold text-primary"></span> &nbsp;|&nbsp; <i class="bi bi-calendar3 ms-1 me-1"></i><span id="dtDate"></span></div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-4 mb-4" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.8);">
+                            <h6 class="fw-bold text-dark small text-uppercase mb-2">Description / Issue Detail</h6>
+                            <p class="text-secondary mb-0 fw-medium" id="dtDesc" style="white-space: pre-line;"></p>
+
+                            <!-- Document View Area -->
+                            <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                                <h6 class="fw-bold text-dark small text-uppercase mb-2"><i class="bi bi-paperclip me-1"></i> Attached Document</h6>
+
+                                <!-- Document එකක් තියෙනවා නම් මේක පෙන්වයි -->
+                                <div id="dtDocArea" style="display: none;">
+                                    <a href="#" id="dtDocLink" class="btn btn-sm rounded-pill fw-bold border shadow-sm" style="background: rgba(14,165,233,0.15); color: #0ea5e9; border-color: rgba(14,165,233,0.3);" target="_blank"><i class="bi bi-download me-1"></i> Download / View Attached File</a>
+                                </div>
+
+                                <!-- Document එකක් නැත්නම් මේක පෙන්වයි -->
+                                <div id="dtNoDocArea" style="display: none;">
+                                    <p class="text-muted small mb-0 fw-medium"><i class="bi bi-file-earmark-x"></i> No document attached by the student.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold text-dark small text-uppercase mb-3"><i class="bi bi-clock-history me-1"></i> Conversation History</h6>
+                        <div id="dtHistoryArea" class="p-3 rounded-4 border" style="max-height: 250px; overflow-y: auto; background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.8);">
+                            <!-- History bubbles will be injected here via JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Reply Form -->
+                    <div class="col-lg-5 ps-lg-4 mt-4 mt-lg-0">
+                        <div class="p-4 rounded-4 h-100 shadow-sm" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);">
+                            <h6 class="fw-bold text-success mb-3 fs-5"><i class="bi bi-reply-fill me-1"></i> Append New Reply</h6>
+                            <form th:action="@{/staff/replyTicket}" method="POST">
+                                <input type="hidden" name="ticketId" id="dtTicketId">
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-dark text-uppercase">Update Ticket Status</label>
+                                    <select name="status" id="dtStatus" class="form-select border-0 shadow-sm bg-white bg-opacity-75 rounded-3 fw-bold" required>
+                                        <option value="IN_PROGRESS" class="text-primary">IN PROGRESS (Working on it)</option>
+                                        <option value="RESOLVED" class="text-success">RESOLVED (Issue Fixed)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold text-dark text-uppercase">Message to Student</label>
+                                    <textarea name="message" class="form-control border-0 shadow-sm bg-white bg-opacity-75 rounded-3" rows="7" placeholder="Type your detailed response here..." required></textarea>
+                                    <div class="form-text small mt-2 text-muted fw-medium"><i class="bi bi-info-circle me-1"></i>This reply will be visible to the student immediately and saved in the history.</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-success fw-bold w-100 rounded-pill shadow-sm py-2 fs-6" style="background: #10b981; border-color: #059669;"><i class="bi bi-send-fill me-1"></i> Send Reply</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel">
+            <div class="modal-header pt-4 px-4 border-0 rounded-top-3">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-bounding-box me-2 text-primary"></i>My Profile & Security</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+
+                <!-- Professional User Details Card -->
+                <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="d-flex align-items-center mb-4 border-bottom pb-3 border-secondary border-opacity-25">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle me-3 shadow-sm" style="width: 65px; height: 65px; background: linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.15) 100%); color: var(--brand-primary);">
+                            <i class="bi bi-person-fill" style="font-size: 2.8rem;"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1" th:text="${session.loggedUser.fullName}"></h5>
+                            <span class="badge badge-soft mt-1"
+                                  th:style="${session.loggedUser.role == 'SUPER_ADMIN' ? 'background: rgba(239,68,68,0.15); color: #ef4444;' : 'background: rgba(79,70,229,0.15); color: #4f46e5;'}"
+                                  th:text="${'You Are : ' + session.loggedUser.role}"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-4 text-muted small fw-bold text-uppercase">Email Address</div>
+                        <div class="col-8 text-dark fw-semibold" th:text="${session.loggedUser.email}"></div>
+                    </div>
+                    <div class="row" th:if="${session.loggedUser.universityId != null and !session.loggedUser.universityId.isEmpty()}">
+                        <div class="col-4 text-muted small fw-bold text-uppercase">Staff ID</div>
+                        <div class="col-8 text-primary fw-bold" th:text="${session.loggedUser.universityId}"></div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Password Change Form -->
+                <div class="p-4 rounded-4" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.8);">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-shield-lock-fill text-warning me-2"></i>Update Security Credentials</h6>
+                    <form th:action="@{/user/changePassword}" method="POST" id="profileChangePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Current Password</label>
+                            <input type="password" name="oldPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">New Password</label>
+                                <input type="password" name="newPassword" id="profileNewPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
+                                <input type="password" id="profileConfirmPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <div id="profilePwdError" class="text-danger fw-bold mt-1" style="display: none; font-size: 0.75rem;">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Passwords do not match!
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" id="profileUpdateBtn" class="btn-custom-primary w-100 disabled" style="pointer-events: none; opacity: 0.6;"><i class="bi bi-check2-circle me-1"></i> Confirm & Update Password</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Profile Modal Password Validation
+        const newPwd = document.getElementById('profileNewPassword');
+        const confirmPwd = document.getElementById('profileConfirmPassword');
+        const pwdError = document.getElementById('profilePwdError');
+        const updateBtn = document.getElementById('profileUpdateBtn');
+
+        if(newPwd && confirmPwd && updateBtn) {
+            function validatePasswords() {
+                const p1 = newPwd.value;
+                const p2 = confirmPwd.value;
+
+                // දෙකම හිස් නැත්නම් සහ දෙකම සමාන නම් විතරක් Button එක Enable කරනවා
+                if(p1 !== '' && p2 !== '' && p1 === p2) {
+                    confirmPwd.classList.remove('is-invalid');
+                    confirmPwd.classList.add('is-valid');
+                    pwdError.style.display = 'none';
+
+                    updateBtn.classList.remove('disabled');
+                    updateBtn.style.pointerEvents = 'auto';
+                    updateBtn.style.opacity = '1';
+                }
+                // දෙකම හිස් නැත්නම් සහ දෙකම අසමාන නම් Button එක Disable කරනවා
+                else if (p1 !== '' && p2 !== '' && p1 !== p2) {
+                    confirmPwd.classList.remove('is-valid');
+                    confirmPwd.classList.add('is-invalid');
+                    pwdError.style.display = 'block';
+
+                    updateBtn.classList.add('disabled');
+                    updateBtn.style.pointerEvents = 'none';
+                    updateBtn.style.opacity = '0.6';
+                }
+                // මුකුත් Type කරලා නැත්නම් සාමාන්‍ය විදියට තියෙනවා (Button Disable)
+                else {
+                    confirmPwd.classList.remove('is-valid', 'is-invalid');
+                    pwdError.style.display = 'none';
+
+                    updateBtn.classList.add('disabled');
+                    updateBtn.style.pointerEvents = 'none';
+                    updateBtn.style.opacity = '0.6';
+                }
+            }
+
+            // අකුරක් Type කරන හැම වෙලාවෙම මේක Check වෙනවා
+            newPwd.addEventListener('input', validatePasswords);
+            confirmPwd.addEventListener('input', validatePasswords);
+        }
+    });
+    // නව Unified Modal එක පාලනය කරන Function එක
+    function openTicketDetailsModal(btn) {
+        // මූලික දත්ත සකස් කිරීම
+        document.getElementById('dtTicketId').value = btn.getAttribute('data-ticket-id');
+        document.getElementById('dtTitle').innerText = btn.getAttribute('data-title');
+        document.getElementById('dtDesc').innerText = btn.getAttribute('data-desc');
+        document.getElementById('dtStudent').innerText = btn.getAttribute('data-student');
+        document.getElementById('dtCat').innerText = btn.getAttribute('data-cat');
+        document.getElementById('dtDate').innerText = btn.getAttribute('data-date');
+
+        // Priority Badge එක සකස් කිරීම
+        let priority = btn.getAttribute('data-priority');
+        let pBadge = document.getElementById('dtPriority');
+        pBadge.innerText = priority;
+        pBadge.className = 'badge rounded-pill ms-1 px-3 py-1 ' +
+            (priority === 'CRITICAL' ? 'bg-danger' : (priority === 'HIGH' ? 'bg-warning text-dark' : 'bg-info text-dark'));
+
+        // Status Dropdown එක සකස් කිරීම
+        let status = btn.getAttribute('data-status');
+        let statusSelect = document.getElementById('dtStatus');
+        if(status === 'RESOLVED' || status === 'CLOSED') {
+            statusSelect.value = 'RESOLVED';
+        } else {
+            statusSelect.value = 'IN_PROGRESS';
+        }
+
+        // Document පෙන්වීමේ තර්කය
+        let docId = btn.getAttribute('data-doc-id');
+        let docArea = document.getElementById('dtDocArea');
+        let noDocArea = document.getElementById('dtNoDocArea');
+        let docLink = document.getElementById('dtDocLink');
+
+        if (docId && docId !== 'null' && docId !== '') {
+            docArea.style.display = 'block';
+            noDocArea.style.display = 'none';
+            docLink.href = '/document/download/' + docId;
+        } else {
+            docArea.style.display = 'none';
+            noDocArea.style.display = 'block';
+        }
+
+        // History Bubbles සකස් කිරීම
+        var rawHistory = btn.getAttribute('data-history');
+        var historyContainer = document.getElementById('dtHistoryArea');
+        historyContainer.innerHTML = '';
+
+        if(rawHistory && rawHistory.trim() !== '') {
+            var replies = rawHistory.split('---SEPARATOR---');
+            replies.forEach(function(reply) {
+                if(reply && reply.trim() !== '') {
+                    var bubble = document.createElement('div');
+                    bubble.className = 'reply-bubble shadow-sm';
+                    bubble.innerText = reply.trim();
+                    historyContainer.appendChild(bubble);
+                }
+            });
+        } else {
+            historyContainer.innerHTML = '<div class="text-center text-muted my-4"><i class="bi bi-chat-square-text text-secondary opacity-50 fs-2 d-block mb-2"></i><small class="fw-medium">No replies have been sent yet.</small></div>';
+        }
+
+        new bootstrap.Modal(document.getElementById('ticketDetailsModal')).show();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

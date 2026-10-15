@@ -1,0 +1,15 @@
+package com.campus.helpdesk.repository;
+
+import com.campus.helpdesk.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer> {
+
+    User findByEmail(String email);
+
+    User findByUniversityId(String universityId);
+
+    User findTopByRoleAndFacultyIdOrderByUniversityIdDesc(String role, Integer facultyId);
+}

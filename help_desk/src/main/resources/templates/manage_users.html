@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Central Help Desk</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+        var(--bg-base): #f8fafc;
+            --brand-primary: #4f46e5;
+            --brand-primary-rgb: 79, 70, 229;
+            --brand-accent: #7c3aed;
+            --brand-navy: #0f172a;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+
+            /* Glassmorphism system */
+            --glass-card: rgba(255, 255, 255, 0.65);
+            --glass-card-hover: rgba(255, 255, 255, 0.88);
+            --glass-border: rgba(255, 255, 255, 0.85);
+            --glass-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.08), 0 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Ambient glowing background orbs */
+        .ambient-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.45;
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, rgba(79, 70, 229, 0.15) 70%, transparent 100%);
+            top: -150px; right: -100px;
+            animation-duration: 22s;
+        }
+
+        .orb-2 {
+            width: 550px; height: 550px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(99, 102, 241, 0.12) 70%, transparent 100%);
+            top: 30%; left: -150px;
+            animation-duration: 26s;
+            animation-delay: -5s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, 30px) scale(1.08); }
+            100% { transform: translate(-30px, 50px) scale(0.95); }
+        }
+
+        /* Glass Surface Utility */
+        .glass-panel {
+            background: var(--glass-card) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: var(--glass-shadow);
+            border-radius: 22px;
+        }
+
+        /* Modern Frosted Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+            padding: 12px 0;
+            z-index: 1050;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--brand-navy) !important;
+            letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .brand-icon-wrapper {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.4);
+            color: #fff; margin-right: 12px;
+        }
+
+        .nav-link {
+            font-weight: 600; color: #475569 !important;
+            transition: all 0.25s ease; border-radius: 10px; padding: 8px 16px !important;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--brand-primary) !important; background: rgba(79, 70, 229, 0.08);
+        }
+
+        /* Primary Action Buttons */
+        .btn-custom-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none; font-weight: 700; padding: 10px 24px; border-radius: 12px;
+            color: #ffffff !important; box-shadow: 0 8px 20px -5px rgba(79, 70, 229, 0.45);
+            transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-custom-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(79, 70, 229, 0.55);
+        }
+
+        /* Profile Dropdown Trigger */
+        .profile-wrapper {
+            background: rgba(255,255,255,0.8); border: 1px solid rgba(79, 70, 229, 0.2);
+            padding: 5px 15px 5px 5px; border-radius: 50px; cursor: pointer; transition: all 0.2s;
+        }
+        .profile-wrapper:hover { background: #fff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); }
+        .profile-circle {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        /* Table Styling */
+        .table-transparent { --bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.4); }
+        .table-transparent th { border-bottom: 2px solid rgba(79, 70, 229, 0.1); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem;}
+        .table-transparent td { border-bottom: 1px solid rgba(255,255,255,0.5); vertical-align: middle; }
+
+        .badge-soft { padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; }
+
+        /* Modal Glass Styling */
+        .modal-content.glass-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; }
+    </style>
+</head>
+<body>
+
+<!-- Ambient Glowing Orbs Background -->
+<div class="ambient-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+</div>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/admin/dashboard}">
+            <div class="brand-icon-wrapper">
+                <i class="bi bi-shield-lock-fill fs-5"></i>
+            </div>
+            <span>Admin <span class="fw-light text-muted">|</span> Portal</span>
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="bi bi-list fs-1 text-dark"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4 align-items-lg-center">
+                <li class="nav-item me-1"><a class="nav-link" th:href="@{/admin/dashboard}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a></li>
+                <li class="nav-item me-1"><a class="nav-link active" th:href="@{/admin/users}"><i class="bi bi-people me-1"></i> Manage Users</a></li>
+                <li class="nav-item me-1"><a class="nav-link" th:href="@{/admin/category/list}"><i class="bi bi-tags me-1"></i> Categories</a></li>
+                <li class="nav-item me-1"><a class="nav-link" th:href="@{/admin/reports}"><i class="bi bi-bar-chart-line me-1"></i> Reports</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                <div class="d-flex align-items-center profile-wrapper" data-bs-toggle="modal" data-bs-target="#profileModal">
+                    <div class="profile-circle me-2"><i class="bi bi-person"></i></div>
+                    <div class="d-flex flex-column lh-1">
+                        <span class="small fw-bold text-dark" th:text="${session.loggedUser.fullName}"></span>
+                        <span class="text-muted" style="font-size: 0.7rem; font-weight: 700;" th:text="${session.loggedUser.role}"></span>
+                    </div>
+                </div>
+                <a th:href="@{/logout}" class="btn btn-sm btn-outline-danger fw-bold rounded-3 px-3"><i class="bi bi-box-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content Area -->
+<div class="container-fluid p-4 p-md-5 position-relative z-1">
+
+    <!-- Delete Dependency Error Alert -->
+    <div th:if="${param.error != null and param.error[0] == 'deleteFailed'}" class="alert alert-danger alert-dismissible fade show glass-panel animate-fade-up" role="alert">
+        <i class="bi bi-exclamation-octagon-fill me-2"></i> <strong>Deletion Failed!</strong> Cannot delete this user because they have active tickets or appointments.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Duplicate User Error Alert -->
+    <div th:if="${param.error != null and param.error[0] == 'duplicateUser'}" class="alert alert-warning alert-dismissible fade show glass-panel animate-fade-up" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Creation Failed!</strong> The email address or ID you entered already exists in the system.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Page Header & Action Buttons -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 animate-fade-up">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -1px;">User Management</h3>
+            <p class="text-muted small mb-0">Add, view, deactivate, or delete student and staff accounts.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <!-- Filter Dropdown -->
+            <div class="glass-panel px-3 py-1 d-flex align-items-center rounded-pill">
+                <i class="bi bi-funnel text-primary me-2"></i>
+                <select id="roleFilter" class="form-select form-select-sm border-0 bg-transparent fw-semibold text-dark shadow-none" style="cursor: pointer; outline: none;">
+                    <option value="ALL" selected>All Roles</option>
+                    <option value="STUDENT">Students</option>
+                    <option value="STAFF">Staff</option>
+                    <option value="ADMIN">Admins</option>
+                    <option value="SUPER_ADMIN">Super Admins</option>
+                </select>
+            </div>
+
+            <!-- Add User Button -->
+            <button type="button" class="btn-custom-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="bi bi-person-plus-fill me-2"></i> New User
+            </button>
+        </div>
+    </div>
+
+    <!-- Users Table Glass Card -->
+    <div class="glass-panel p-4 animate-fade-up delay-1">
+        <div class="table-responsive">
+            <table class="table table-hover table-transparent align-middle mb-0">
+                <thead>
+                <tr>
+                    <th class="py-3">ID</th>
+                    <th class="py-3">User Details</th>
+                    <th class="py-3">Email Address</th>
+                    <th class="py-3">System Role</th>
+                    <th class="py-3">Status</th>
+                    <th class="py-3">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- user-row class is for JS Filtering -->
+                <tr th:each="u : ${userList}" class="user-row">
+                <tr th:each="u : ${userList}" th:if="${u.role != 'SUPER_ADMIN'}" class="user-row">
+                    <td class="text-muted fw-bold">#<span th:text="${u.userId}"></span></td>
+                    <td>
+                        <strong class="text-dark d-block" th:text="${u.fullName}"></strong>
+                        <small th:if="${u.universityId != null and !u.universityId.isEmpty()}" class="text-muted fw-medium">
+                            <i class="bi bi-person-badge me-1"></i><span th:text="${u.universityId}"></span>
+                        </small>
+                    </td>
+                    <td class="text-muted email-cell" th:text="${u.email}"></td>
+                    <td>
+                        <!-- role-badge is for JS Filtering -->
+                        <span class="badge badge-soft role-badge"
+                              th:style="${u.role == 'SUPER_ADMIN' ? 'background: rgba(239,68,68,0.15); color: #ef4444;' : (u.role == 'ADMIN' ? 'background: rgba(245,158,11,0.15); color: #d97706;' : (u.role == 'STAFF' ? 'background: rgba(16,185,129,0.15); color: #059669;' : 'background: rgba(79,70,229,0.15); color: #4f46e5;'))}"
+                              th:text="${u.role}">
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-soft"
+                              th:style="${u.accountStatus == 'ACTIVE' ? 'background: rgba(16,185,129,0.15); color: #059669;' : 'background: rgba(239,68,68,0.15); color: #ef4444;'}"
+                              th:text="${u.accountStatus}">
+                        </span>
+                    </td>
+                    <td>
+                        <div th:if="${u.userId != session.loggedUser.userId}" class="d-flex gap-2">
+                            <a th:if="${!(u.role == 'SUPER_ADMIN' and session.loggedUser.role != 'SUPER_ADMIN')}"
+                               th:href="@{/admin/users/toggleStatus(id=${u.userId}, status=${u.accountStatus})}"
+                               class="btn btn-sm rounded-3 fw-semibold border"
+                               th:classappend="${u.accountStatus == 'ACTIVE' ? 'btn-outline-warning' : 'btn-outline-success'}"
+                               style="background: rgba(255,255,255,0.5);"
+                               title="Toggle Account Status">
+                                <i class="bi" th:classappend="${u.accountStatus == 'ACTIVE' ? 'bi-slash-circle' : 'bi-check-circle'}"></i>
+                            </a>
+
+                            <button th:if="${session.loggedUser.role == 'SUPER_ADMIN'}"
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger rounded-3 fw-semibold border"
+                                    style="background: rgba(255,255,255,0.5);"
+                                    th:data-id="${u.userId}"
+                                    th:data-name="${u.fullName}"
+                                    onclick="openDeleteModal(this)"
+                                    title="Delete Account">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="noUsersRow" th:style="${#lists.isEmpty(userList) ? '' : 'display: none;'}">
+                    <td colspan="6" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                            <i class="bi bi-people text-secondary opacity-50 mb-3" style="font-size: 3rem;"></i>
+                            <h6 class="text-dark fw-semibold" id="noUsersText">No users found.</h6>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-danger">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-2 text-center">
+                <div class="mb-3 d-inline-flex p-3 rounded-circle" style="background: rgba(239,68,68,0.1);">
+                    <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Are you absolutely sure?</h5>
+                <p class="text-muted small">You are about to permanently delete the account of <strong id="deleteUserName" class="text-dark"></strong>.</p>
+                <div class="alert small border-0 mt-3" style="background: rgba(245,158,11,0.15); color: #d97706; text-align: left;">
+                    <i class="bi bi-info-circle-fill me-1"></i> <strong>Note:</strong> System will prevent deletion if active tickets exist.
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 px-4 py-3 justify-content-center gap-2">
+                <button type="button" class="btn btn-light fw-semibold rounded-pill px-4 border" style="background: rgba(255,255,255,0.5);" data-bs-dismiss="modal">Cancel</button>
+                <a id="confirmDeleteBtn" href="#" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm">Yes, Delete User</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal (Dynamic Form) -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-primary">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-primary"><i class="bi bi-person-plus me-2"></i>Create New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/admin/users/add}" method="POST" id="addUserForm">
+                <div class="modal-body px-4 pb-2">
+
+                    <!-- පිළිවෙළ වෙනස් කරන ලදි: Role, Faculty, ID, Email, Name, Password -->
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">User Role</label>
+                        <select name="role" id="userRoleSelect" class="form-select rounded-3 fw-bold border-0 shadow-sm" style="background: rgba(79,70,229,0.1); color: #4f46e5;" required>
+                            <option value="STUDENT" selected>STUDENT</option>
+                            <option value="STAFF">STAFF (Support Staff)</option>
+                            <th:block th:if="${session.loggedUser.role == 'SUPER_ADMIN'}">
+                                <option value="ADMIN">ADMIN</option>
+                            </th:block>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="facultyGroup">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Associated Faculty</label>
+                        <select name="facultyId" id="facultyIdSelect" class="form-select rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                            <option value="" disabled selected>Select Faculty...</option>
+                            <option th:each="fac : ${facultyList}" th:value="${fac.facultyId}" th:text="${fac.facultyName}" th:data-code="${fac.facultyCode}"></option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="uniIdGroup">
+                        <label class="form-label small fw-bold text-muted text-uppercase" id="uniIdLabel">Student ID</label>
+                        <input type="text" name="universityId" id="universityIdInput" class="form-control rounded-3 border-0 shadow-sm text-primary fw-bold" style="background: rgba(14,165,233,0.1);" readonly required>
+                        <div class="form-text small mt-1 text-primary"><i class="bi bi-magic me-1"></i> ID is auto-generated securely.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Email Address</label>
+                        <input type="email" name="email" id="emailInput" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" placeholder="e.g. nimal@sliit.lk" required>
+                        <div id="emailError" class="invalid-feedback fw-bold" style="display: none;">
+                            This email address is already in use! Please use a different one.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Full Name</label>
+                        <input type="text" name="fullName" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" placeholder="e.g. Nimal Perera" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Password</label>
+                        <input type="text" name="password" class="form-control rounded-3 border-0 shadow-sm" style="background: rgba(0,0,0,0.03);" value="Password@123" required>
+                        <div class="form-text small mt-1"><i class="bi bi-info-circle me-1"></i>Default password is set to Password@123</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 px-4 py-3">
+                    <button type="button" class="btn btn-light fw-semibold border" style="background: rgba(255,255,255,0.5);" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-custom-primary" id="submitBtn">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- User Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel">
+            <div class="modal-header pt-4 px-4 border-0 rounded-top-3">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-bounding-box me-2 text-primary"></i>My Profile & Security</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+
+                <!-- Professional User Details Card -->
+                <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="d-flex align-items-center mb-4 border-bottom pb-3 border-secondary border-opacity-25">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle me-3 shadow-sm" style="width: 65px; height: 65px; background: linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.15) 100%); color: var(--brand-primary);">
+                            <i class="bi bi-person-fill" style="font-size: 2.8rem;"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1" th:text="${session.loggedUser.fullName}"></h5>
+                            <span class="badge badge-soft mt-1"
+                                  th:style="${session.loggedUser.role == 'SUPER_ADMIN' ? 'background: rgba(239,68,68,0.15); color: #ef4444;' : 'background: rgba(79,70,229,0.15); color: #4f46e5;'}"
+                                  th:text="${'You Are : ' + session.loggedUser.role}"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-4 text-muted small fw-bold text-uppercase">Email Address</div>
+                        <div class="col-8 text-dark fw-semibold" th:text="${session.loggedUser.email}"></div>
+                    </div>
+                    <div class="row" th:if="${session.loggedUser.universityId != null and !session.loggedUser.universityId.isEmpty()}">
+                        <div class="col-4 text-muted small fw-bold text-uppercase">System ID</div>
+                        <div class="col-8 text-primary fw-bold" th:text="${session.loggedUser.universityId}"></div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Password Change Form -->
+                <div class="p-4 rounded-4" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.8);">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-shield-lock-fill text-warning me-2"></i>Update Security Credentials</h6>
+                    <form th:action="@{/user/changePassword}" method="POST" id="profileChangePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Current Password</label>
+                            <input type="password" name="oldPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">New Password</label>
+                                <input type="password" name="newPassword" id="profileNewPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
+                                <input type="password" id="profileConfirmPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <div id="profilePwdError" class="text-danger fw-bold mt-1" style="display: none; font-size: 0.75rem;">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Passwords do not match!
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" id="profileUpdateBtn" class="btn-custom-primary w-100 disabled" style="pointer-events: none; opacity: 0.6;"><i class="bi bi-check2-circle me-1"></i> Confirm & Update Password</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+    // Delete Modal Logic
+    function openDeleteModal(btn) {
+        const userId = btn.getAttribute('data-id');
+        const userName = btn.getAttribute('data-name');
+        document.getElementById('deleteUserName').innerText = userName;
+        document.getElementById('confirmDeleteBtn').href = '/admin/users/delete?id=' + userId;
+        new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Client-Side Table Filtering Logic
+        const roleFilter = document.getElementById('roleFilter');
+        const userRows = document.querySelectorAll('.user-row');
+        const noUsersRow = document.getElementById('noUsersRow');
+        const noUsersText = document.getElementById('noUsersText');
+
+
+        /// Profile Modal එකේ Password මාරු කිරීමේ Validation එක
+        const newPwd = document.getElementById('profileNewPassword');
+        const confirmPwd = document.getElementById('profileConfirmPassword');
+        const pwdError = document.getElementById('profilePwdError');
+        const updateBtn = document.getElementById('profileUpdateBtn');
+
+        function validatePasswords() {
+            // Field දෙකම හිස් නම් මුකුත් පෙන්නන්න එපා
+            if (newPwd.value === '' && confirmPwd.value === '') {
+                updateBtn.classList.add('disabled');
+                updateBtn.style.pointerEvents = 'none';
+                updateBtn.style.opacity = '0.6';
+                pwdError.style.display = 'none';
+                confirmPwd.classList.remove('is-invalid', 'is-valid');
+                return;
+            }
+
+            // Password දෙක අසමාන නම්
+            if (newPwd.value !== confirmPwd.value) {
+                updateBtn.classList.add('disabled');
+                updateBtn.style.pointerEvents = 'none';
+                updateBtn.style.opacity = '0.6';
+
+                // Confirm box එකේ මොනවා හරි type කරලා තියෙනවා නම් විතරක් Error එක පෙන්නන්න
+                if (confirmPwd.value !== '') {
+                    pwdError.style.display = 'block';
+                    confirmPwd.classList.add('is-invalid');
+                    confirmPwd.classList.remove('is-valid');
+                }
+            } else {
+                // Password දෙක සමාන නම් Button එක වැඩ කරන්න දෙනවා
+                updateBtn.classList.remove('disabled');
+                updateBtn.style.pointerEvents = 'auto';
+                updateBtn.style.opacity = '1';
+
+                pwdError.style.display = 'none';
+                confirmPwd.classList.remove('is-invalid');
+                confirmPwd.classList.add('is-valid'); // කොළ පාටින් හරි ලකුණක් වැටෙන්න
+            }
+        }
+
+        // Type කරන හැම වෙලාවෙම මේ function එක වැඩ කරන්න දානවා
+        if (newPwd && confirmPwd) {
+            newPwd.addEventListener('input', validatePasswords);
+            confirmPwd.addEventListener('input', validatePasswords);
+        }
+
+        if(roleFilter) {
+            roleFilter.addEventListener('change', function() {
+                const selectedRole = this.value;
+                let visibleCount = 0;
+
+                userRows.forEach(row => {
+                    const roleBadge = row.querySelector('.role-badge');
+                    if (!roleBadge) return;
+
+                    const rowRole = roleBadge.textContent.trim();
+                    if (selectedRole === 'ALL' || rowRole === selectedRole) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                if (visibleCount === 0) {
+                    noUsersRow.style.display = '';
+                    noUsersText.innerText = selectedRole === 'ALL' ? 'No users found in the system.' : 'No users found for the selected role.';
+                } else {
+                    noUsersRow.style.display = 'none';
+                }
+            });
+        }
+
+        // --- NEW: Backend API Calls for Duplicate Email and Auto ID Generation ---
+
+        const roleSelect = document.getElementById('userRoleSelect');
+        const facultySelect = document.getElementById('facultyIdSelect');
+        const uniIdInput = document.getElementById('universityIdInput');
+        const emailInput = document.getElementById('emailInput');
+        const emailError = document.getElementById('emailError');
+        const submitBtn = document.getElementById('submitBtn');
+        const uniIdGroup = document.getElementById('uniIdGroup');
+        const facultyGroup = document.getElementById('facultyGroup');
+        const uniIdLabel = document.getElementById('uniIdLabel');
+
+        // 1. Check Email Duplicates from Backend
+        if(emailInput) {
+            emailInput.addEventListener('input', function() {
+                const email = this.value.trim();
+                if (email.length > 0) {
+                    fetch('/admin/users/checkEmail?email=' + encodeURIComponent(email))
+                        .then(response => response.text())
+                        .then(data => {
+                            if(data === 'true') {
+                                this.classList.add('is-invalid');
+                                emailError.style.display = 'block';
+                                submitBtn.disabled = true;
+                            } else {
+                                this.classList.remove('is-invalid');
+                                emailError.style.display = 'none';
+                                submitBtn.disabled = false;
+                            }
+                        });
+                } else {
+                    this.classList.remove('is-invalid');
+                    emailError.style.display = 'none';
+                    submitBtn.disabled = false;
+                }
+            });
+        }
+
+        // 2. Fetch Auto Generated ID from Backend
+        function generateIdFromBackend() {
+            const role = roleSelect.value;
+            const facultyOption = facultySelect.options[facultySelect.selectedIndex];
+
+            if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+                uniIdInput.value = '';
+                return;
+            }
+
+            if (!facultyOption || facultyOption.value === "") {
+                uniIdInput.value = "";
+                return;
+            }
+
+            const facultyId = facultyOption.value;
+            const facultyCode = facultyOption.getAttribute('data-code') || "GEN";
+
+            // Backend එකට කතා කරලා හරිම අන්තිම ID එකෙන් ඊළඟ ID එක ඉල්ලනවා
+            fetch('/admin/users/generateId?role=' + role + '&facultyId=' + facultyId + '&facultyCode=' + facultyCode)
+                .then(response => response.text())
+                .then(newId => {
+                    uniIdInput.value = newId;
+                });
+        }
+
+        function updateFormFields() {
+            const role = roleSelect.value;
+
+            if (role === 'STUDENT') {
+                uniIdGroup.style.display = 'block';
+                facultyGroup.style.display = 'block';
+                uniIdLabel.innerText = 'STUDENT ID';
+                uniIdInput.required = true;
+                facultySelect.required = true;
+            } else if (role === 'STAFF') {
+                uniIdGroup.style.display = 'block';
+                facultyGroup.style.display = 'block';
+                uniIdLabel.innerText = 'STAFF ID';
+                uniIdInput.required = true;
+                facultySelect.required = true;
+            } else {
+                uniIdGroup.style.display = 'none';
+                facultyGroup.style.display = 'none';
+                uniIdInput.required = false;
+                facultySelect.required = false;
+                uniIdInput.value = '';
+                facultySelect.value = '';
+            }
+        }
+
+        if(roleSelect) {
+            roleSelect.addEventListener('change', function() {
+                updateFormFields();
+                generateIdFromBackend(); // Role එක මාරු වුණ ගමන් අලුත් ID එකක් ඉල්ලනවා
+            });
+            facultySelect.addEventListener('change', generateIdFromBackend); // Faculty එක මාරු වුණ ගමන් අලුත් ID එකක් ඉල්ලනවා
+            updateFormFields();
+        }
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

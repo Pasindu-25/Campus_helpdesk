@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - SLIIT</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Palette inspired by the glassmorphism reference */
+        var(--bg-base): #f8fafc;
+            --brand-primary: #4f46e5;
+            --brand-primary-rgb: 79, 70, 229;
+            --brand-accent: #7c3aed;
+            --brand-navy: #0f172a;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+
+            /* Glassmorphism system */
+            --glass-card: rgba(255, 255, 255, 0.65);
+            --glass-card-hover: rgba(255, 255, 255, 0.88);
+            --glass-border: rgba(255, 255, 255, 0.85);
+            --glass-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.08), 0 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Ambient glowing background orbs */
+        .ambient-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.45;
+            animation: orbFloat 18s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, rgba(79, 70, 229, 0.15) 70%, transparent 100%);
+            top: -150px; right: -100px;
+            animation-duration: 22s;
+        }
+
+        .orb-2 {
+            width: 550px; height: 550px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, rgba(99, 102, 241, 0.12) 70%, transparent 100%);
+            top: 30%; left: -150px;
+            animation-duration: 26s;
+            animation-delay: -5s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, 30px) scale(1.08); }
+            100% { transform: translate(-30px, 50px) scale(0.95); }
+        }
+
+        /* Glass Surface Utility */
+        .glass-panel {
+            background: var(--glass-card) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: var(--glass-shadow);
+            border-radius: 22px;
+        }
+
+        /* Modern Frosted Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+            padding: 12px 0;
+            z-index: 1050;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--brand-navy) !important;
+            letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .brand-icon-wrapper {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            display: inline-flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 16px -4px rgba(16, 185, 129, 0.4);
+            color: #fff; margin-right: 12px;
+        }
+
+        .nav-link {
+            font-weight: 600; color: #475569 !important;
+            transition: all 0.25s ease; border-radius: 10px; padding: 8px 16px !important;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #10b981 !important; background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* Stat Cards Styling */
+        .stat-card { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: var(--glass-shadow-hover); background: var(--glass-card-hover) !important; }
+
+        /* Profile Dropdown Trigger */
+        .profile-wrapper {
+            background: rgba(255,255,255,0.8); border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 5px 15px 5px 5px; border-radius: 50px; cursor: pointer; transition: all 0.2s;
+        }
+        .profile-wrapper:hover { background: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); }
+        .profile-circle {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+
+        /* Primary Action Buttons */
+        .btn-custom-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none; font-weight: 700; padding: 10px 24px; border-radius: 12px;
+            color: #ffffff !important; box-shadow: 0 8px 20px -5px rgba(79, 70, 229, 0.45);
+            transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-custom-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(79, 70, 229, 0.55);
+        }
+
+        /* Reply Bubbles */
+        .reply-bubble {
+            background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
+            border-left: 4px solid #10b981; border-top: 1px solid rgba(255,255,255,0.8); border-right: 1px solid rgba(255,255,255,0.8); border-bottom: 1px solid rgba(255,255,255,0.8);
+            padding: 14px; margin-bottom: 12px; border-radius: 10px; font-size: 0.9rem; white-space: pre-line; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        /* Table Styling */
+        .table-transparent { --bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.4); }
+        .table-transparent th { border-bottom: 2px solid rgba(79, 70, 229, 0.1); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.8rem;}
+        .table-transparent td { border-bottom: 1px solid rgba(255,255,255,0.5); vertical-align: middle; }
+        .badge-soft { padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; }
+
+        /* Modal Glass Styling */
+        .modal-content.glass-panel { background: rgba(255, 255, 255, 0.85) !important; }
+
+        /* Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+    </style>
+</head>
+<body>
+
+<!-- Ambient Glowing Orbs Background -->
+<div class="ambient-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+</div>
+
+<!-- 1. Top Glass Header (Brand & Navigation) -->
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" th:href="@{/student/ticket/dashboard}">
+            <div class="brand-icon-wrapper">
+                <i class="bi bi-mortarboard-fill fs-5"></i>
+            </div>
+            <span>Student <span class="fw-light text-muted">|</span> Portal</span>
+        </a>
+
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="bi bi-list fs-1 text-dark"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4 align-items-lg-center">
+                <li class="nav-item me-1"><a class="nav-link active" th:href="@{/student/ticket/dashboard}"><i class="bi bi-house-door me-1"></i> Home</a></li>
+                <li class="nav-item me-1"><a class="nav-link" th:href="@{/student/ticket/myTickets}"><i class="bi bi-ticket-detailed-fill me-1"></i> My Tickets</a></li>
+                <li class="nav-item me-1"><a class="nav-link" th:href="@{/appointment/myAppointments}"><i class="bi bi-calendar-check-fill me-1"></i> Book Appointment</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                <div class="d-flex align-items-center profile-wrapper" data-bs-toggle="modal" data-bs-target="#profileModal">
+                    <div class="profile-circle me-2"><i class="bi bi-person"></i></div>
+                    <div class="d-flex flex-column lh-1">
+                        <span class="small fw-bold text-dark" th:text="${session.loggedUser.fullName}"></span>
+                        <span class="text-muted" style="font-size: 0.7rem; font-weight: 700;" th:text="${session.loggedUser.role}"></span>
+                    </div>
+                </div>
+                <a th:href="@{/logout}" class="btn btn-sm btn-outline-danger fw-bold rounded-3 px-3"><i class="bi bi-box-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 3. Main Content Area -->
+<div class="container-fluid p-4 p-md-5 position-relative z-1">
+
+    <div th:if="${param.error != null and param.error[0] == 'InvalidOldPassword'}" class="alert alert-danger alert-dismissible fade show glass-panel animate-fade-up" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>Failed!</strong> The Old Password you entered is incorrect.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Welcome Banner (Glassmorphic) -->
+    <div class="glass-panel p-4 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 animate-fade-up border-0" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%) !important;">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.5px;">Need Help with Campus Services?</h3>
+            <p class="mb-0 text-muted">Submit a new support ticket securely.</p>
+        </div>
+        <button type="button" class="btn-custom-primary shadow-sm py-2" data-bs-toggle="modal" data-bs-target="#newTicketModal">
+            <i class="bi bi-plus-lg me-1"></i> New Ticket
+        </button>
+    </div>
+
+    <!-- Quick Links Grid -->
+    <div class="row g-4 mb-5 animate-fade-up delay-1">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card stat-card glass-panel p-4 h-100 border-0" onclick="location.href='/student/ticket/myTickets'">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3" style="background: rgba(79, 70, 229, 0.1);"><i class="bi bi-ticket-detailed-fill fs-4" style="color: #4f46e5;"></i></div>
+                </div>
+                <h6 class="fw-bold text-dark mb-2 fs-5">My Tickets</h6>
+                <span class="badge badge-soft" style="background: rgba(79,70,229,0.15); color: #4f46e5;" th:text="|${ticketList != null ? ticketList.size() : 0} Total|"></span>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card stat-card glass-panel p-4 h-100 border-0" data-bs-toggle="modal" data-bs-target="#profileModal">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3" style="background: rgba(14, 165, 233, 0.1);"><i class="bi bi-person-circle fs-4 text-info"></i></div>
+                </div>
+                <h6 class="fw-bold text-dark mb-2 fs-5">My Profile</h6>
+                <span class="text-muted small">View & Security</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tickets Table Area -->
+    <div class="animate-fade-up delay-2">
+        <h6 class="text-muted small fw-bold text-uppercase mb-3">System Overview</h6>
+        <div class="card stat-card glass-panel p-4 border-0">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div class="d-flex align-items-center">
+                    <div class="p-2 rounded-4 me-3" style="background: rgba(79, 70, 229, 0.1);">
+                        <i class="bi bi-clock-history fs-4" style="color: #4f46e5;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-0 text-dark">My Submitted Tickets</h5>
+                </div>
+                <a th:href="@{/student/ticket/dashboard}" class="btn btn-sm btn-light border fw-semibold rounded-pill px-3 glass-panel" style="background: rgba(255,255,255,0.5);"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-transparent align-middle border-top">
+                    <thead class="table-light text-muted small" style="background: transparent;">
+                    <tr>
+                        <th class="py-3 bg-transparent" style="width: 8%;">Ticket ID</th>
+                        <th class="py-3 bg-transparent" style="width: 30%;">Title & Details</th>
+                        <th class="py-3 bg-transparent" style="width: 15%;">Category</th>
+                        <th class="py-3 bg-transparent" style="width: 10%;">Priority</th>
+                        <th class="py-3 bg-transparent" style="width: 12%;">Status</th>
+                        <th class="py-3 bg-transparent" style="width: 10%;">Date</th>
+                        <th class="py-3 bg-transparent" style="width: 15%;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t : ${ticketList}">
+                        <td class="fw-bold text-muted bg-transparent">#<span th:text="${t.ticketId}"></span></td>
+                        <td class="bg-transparent">
+                            <strong class="text-dark d-block" th:text="${t.title}"></strong>
+                            <small class="text-muted text-truncate d-inline-block" style="max-width: 250px;" th:text="${t.description}"></small><br>
+                            <!-- Download Attachment Link -->
+                            <a th:if="${t.attachedDocId != null}" th:href="@{/document/download/{id}(id=${t.attachedDocId})}" class="badge badge-soft mt-1 text-decoration-none" style="background: rgba(14,165,233,0.15); color: #0ea5e9;">
+                                <i class="bi bi-paperclip"></i> View Attachment
+                            </a>
+                        </td>
+                        <td class="bg-transparent">
+                            <span class="badge badge-soft" style="background: rgba(100,116,139,0.15); color: #64748b;" th:text="${t.categoryName}"></span>
+                        </td>
+                        <td class="bg-transparent">
+                            <span class="badge badge-soft"
+                                  th:style="${t.priority == 'CRITICAL' ? 'background: rgba(239,68,68,0.15); color: #ef4444;' : (t.priority == 'HIGH' ? 'background: rgba(245,158,11,0.15); color: #d97706;' : 'background: rgba(14,165,233,0.15); color: #0ea5e9;')}"
+                                  th:text="${t.priority}">
+                            </span>
+                        </td>
+                        <td class="bg-transparent">
+                            <span class="badge badge-soft"
+                                  th:style="${t.status == 'RESOLVED' or t.status == 'CLOSED' ? 'background: rgba(16,185,129,0.15); color: #059669;' : (t.status == 'IN_PROGRESS' ? 'background: rgba(79,70,229,0.15); color: #4f46e5;' : 'background: rgba(245,158,11,0.15); color: #d97706;')}"
+                                  th:text="${t.status}">
+                            </span>
+                        </td>
+                        <td class="small text-muted bg-transparent" th:text="${#dates.format(t.createdAt, 'yyyy-MM-dd')}"></td>
+                        <td class="bg-transparent">
+                            <div th:if="${t.status == 'OPEN' and !t.escalated}" class="d-flex gap-1 mb-1">
+                                <button type="button" class="btn btn-sm rounded-3 fw-semibold border shadow-sm"
+                                        style="background: rgba(255,255,255,0.6); color: #4f46e5; border-color: rgba(79,70,229,0.2);"
+                                        th:data-id="${t.ticketId}"
+                                        th:data-title="${t.title}"
+                                        th:data-desc="${t.description}"
+                                        th:data-cat="${t.categoryId}"
+                                        th:data-fac="${t.facultyId}"
+                                        th:data-priority="${t.priority}"
+                                        onclick="openEditTicketModal(this)"
+                                        title="Edit Ticket">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm rounded-3 fw-semibold border shadow-sm w-50"
+                                        style="background: rgba(255,255,255,0.6); color: #ef4444; border-color: rgba(239,68,68,0.2);"
+                                        th:data-id="${t.ticketId}"
+                                        onclick="openDeleteTicketModal(this)"
+                                        title="Delete Ticket">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+
+                            <div th:if="${t.status != 'OPEN' or t.escalated}" class="text-muted small mb-1 fw-medium"><i class="bi bi-lock-fill"></i> Locked</div>
+
+                            <button th:if="${t.staffResponse != null or t.adminResponse != null}"
+                                    type="button" class="btn btn-sm rounded-pill px-3 shadow-sm w-100 fw-bold border"
+                                    style="background: rgba(16,185,129,0.15); color: #059669; border-color: rgba(16,185,129,0.3);"
+                                    th:data-title="${t.title}"
+                                    th:data-history="${t.staffResponse}"
+                                    th:data-admin="${t.adminResponse}"
+                                    onclick="openStudentHistoryModal(this)">
+                                <i class="bi bi-chat-text-fill"></i> View Reply
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(ticketList)}">
+                        <td colspan="7" class="text-center py-5 bg-transparent">
+                            <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                                <i class="bi bi-inbox text-secondary opacity-50 mb-3" style="font-size: 3rem;"></i>
+                                <h6 class="text-dark fw-semibold">No tickets submitted yet.</h6>
+                                <p class="small mb-0">Click "New Ticket" to get started!</p>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 1. New Ticket Modal -->
+<div class="modal fade" id="newTicketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-panel border-primary">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-plus-circle me-2 text-primary"></i>Submit New Support Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/student/ticket/add}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body px-4 pb-2">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Student ID</label>
+                            <input type="text" class="form-control rounded-3 border-0 shadow-sm" style="background: rgba(0,0,0,0.03);" th:value="${session.loggedUser.universityId}" readonly>
+                            <div class="form-text small" style="color: #10b981;"><i class="bi bi-lock-fill"></i> Verified Campus ID</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Target Faculty / Department</label>
+                            <select name="facultyId" class="form-select rounded-3 fw-bold border-0 shadow-sm" style="background: rgba(79,70,229,0.1); color: #4f46e5;" required>
+                                <option value="" disabled selected>Select Target Faculty...</option>
+                                <option th:each="fac : ${facultyList}" th:value="${fac.facultyId}" th:text="${fac.facultyName}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">ISSUE TITLE</label>
+                        <input type="text" name="title" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">CATEGORY</label>
+                            <select name="categoryId" class="form-select rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <option value="" disabled selected>Select a Category...</option>
+                                <option th:each="cat : ${categoryList}" th:value="${cat.categoryId}" th:text="${cat.categoryName}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">PRIORITY LEVEL</label>
+                            <select name="priority" class="form-select rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <option value="LOW">LOW</option>
+                                <option value="MEDIUM" selected>MEDIUM</option>
+                                <option value="HIGH">HIGH</option>
+                                <option value="CRITICAL">CRITICAL</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">DETAILED DESCRIPTION</label>
+                        <textarea name="description" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" rows="4" required></textarea>
+                    </div>
+
+                    <div class="mb-3 border rounded-3 p-3" style="background: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.8) !important;">
+                        <label class="form-label small fw-bold text-muted text-uppercase"><i class="bi bi-paperclip me-1"></i> Attach Document (Optional)</label>
+                        <input type="file" name="file" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <div class="form-text small text-secondary mt-2">Max file size: 5MB. Allowed formats: PDF, Images (PNG/JPG), Word Documents.</div>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-top-0 px-4 py-3">
+                    <button type="button" class="btn btn-light fw-semibold border" style="background: rgba(255,255,255,0.5);" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-custom-primary">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Edit Ticket Modal -->
+<div class="modal fade" id="editTicketModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-panel border-warning">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Support Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/student/ticket/edit}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="ticketId" id="editTicketId">
+                <input type="hidden" name="redirectPage" value="dashboard">
+                <div class="modal-body px-4 pb-2">
+                    <div class="alert small border-0 mb-3 rounded-3" style="background: rgba(14,165,233,0.15); color: #0ea5e9;">
+                        <i class="bi bi-info-circle-fill me-1"></i> You can only modify this ticket because support staff have not started processing it yet (Status: OPEN).
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Student ID</label>
+                            <input type="text" class="form-control rounded-3 border-0 shadow-sm" style="background: rgba(0,0,0,0.03);" th:value="${session.loggedUser.universityId}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Target Faculty / Department</label>
+                            <select name="facultyId" id="editFaculty" class="form-select rounded-3 fw-bold border-0 shadow-sm" style="background: rgba(245,158,11,0.15); color: #d97706;" required>
+                                <option th:each="fac : ${facultyList}" th:value="${fac.facultyId}" th:text="${fac.facultyName}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">ISSUE TITLE</label>
+                        <input type="text" name="title" id="editTitle" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">CATEGORY</label>
+                            <select name="categoryId" id="editCategory" class="form-select rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <option th:each="cat : ${categoryList}" th:value="${cat.categoryId}" th:text="${cat.categoryName}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">PRIORITY LEVEL</label>
+                            <select name="priority" id="editPriority" class="form-select rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <option value="LOW">LOW</option>
+                                <option value="MEDIUM">MEDIUM</option>
+                                <option value="HIGH">HIGH</option>
+                                <option value="CRITICAL">CRITICAL</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">DETAILED DESCRIPTION</label>
+                        <textarea name="description" id="editDescription" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" rows="4" required></textarea>
+                    </div>
+
+                    <div class="mb-3 border rounded-3 p-3" style="background: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.8) !important;">
+                        <label class="form-label small fw-bold text-muted text-uppercase"><i class="bi bi-paperclip me-1"></i> Attach/Update Document (Optional)</label>
+                        <input type="file" name="file" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx">
+                        <div class="form-text small text-secondary mt-2">Uploading a new file will overwrite the existing one (if any). Max file size: 5MB.</div>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-top-0 px-4 py-3">
+                    <button type="button" class="btn btn-light fw-semibold border" style="background: rgba(255,255,255,0.5);" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm text-dark">Update Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- NEW: Delete Ticket Confirmation Modal -->
+<div class="modal fade" id="deleteTicketConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border-danger">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-2 text-center">
+                <div class="mb-3 d-inline-flex p-3 rounded-circle" style="background: rgba(239,68,68,0.1);">
+                    <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Are you absolutely sure?</h5>
+                <p class="text-muted small">You are about to permanently delete this ticket. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-top-0 px-4 py-3 justify-content-center gap-2">
+                <button type="button" class="btn btn-light fw-semibold rounded-pill px-4 border" style="background: rgba(255,255,255,0.5);" data-bs-dismiss="modal">Cancel</button>
+                <a id="confirmDeleteTicketBtn" href="#" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm">Yes, Delete Ticket</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Student Reply History View Modal -->
+<div class="modal fade" id="studentHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass-panel border-success">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-chat-left-text me-2 text-success"></i>Official Ticket Responses</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-2">
+                <h6 class="fw-bold text-dark mb-3" id="shTitle"></h6>
+                <hr class="opacity-25 border-secondary">
+
+                <div id="shAdminArea"></div>
+
+                <label class="form-label small fw-bold text-muted text-uppercase mb-3">STAFF REPLIES:</label>
+                <div id="shContentArea" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 px-4 py-3">
+                <button type="button" class="btn btn-light fw-semibold rounded-pill px-4 border" style="background: rgba(255,255,255,0.5);" data-bs-dismiss="modal">Close Window</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel">
+            <div class="modal-header pt-4 px-4 border-0 rounded-top-3">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-bounding-box me-2 text-primary"></i>My Profile & Security</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+
+                <!-- Professional User Details Card -->
+                <div class="p-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="d-flex align-items-center mb-4 border-bottom pb-3 border-secondary border-opacity-25">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle me-3 shadow-sm" style="width: 65px; height: 65px; background: linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.15) 100%); color: var(--brand-primary);">
+                            <i class="bi bi-person-fill" style="font-size: 2.8rem;"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1" th:text="${session.loggedUser.fullName}"></h5>
+                            <span class="badge badge-soft mt-1"
+                                  th:style="${session.loggedUser.role == 'SUPER_ADMIN' ? 'background: rgba(239,68,68,0.15); color: #ef4444;' : 'background: rgba(79,70,229,0.15); color: #4f46e5;'}"
+                                  th:text="${'You Are : ' + session.loggedUser.role}"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-4 text-muted small fw-bold text-uppercase">Email Address</div>
+                        <div class="col-8 text-dark fw-semibold" th:text="${session.loggedUser.email}"></div>
+                    </div>
+                    <div class="row" th:if="${session.loggedUser.universityId != null and !session.loggedUser.universityId.isEmpty()}">
+                        <div class="col-4 text-muted small fw-bold text-uppercase">System ID</div>
+                        <div class="col-8 text-primary fw-bold" th:text="${session.loggedUser.universityId}"></div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Password Change Form -->
+                <div class="p-4 rounded-4" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.8);">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-shield-lock-fill text-warning me-2"></i>Update Security Credentials</h6>
+                    <form th:action="@{/user/changePassword}" method="POST" id="profileChangePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Current Password</label>
+                            <input type="password" name="oldPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">New Password</label>
+                                <input type="password" name="newPassword" id="profileNewPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Confirm Password</label>
+                                <input type="password" id="profileConfirmPassword" class="form-control rounded-3 border-0 shadow-sm bg-white bg-opacity-75" required>
+                                <div id="profilePwdError" class="text-danger fw-bold mt-1" style="display: none; font-size: 0.75rem;">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Passwords do not match!
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" id="profileUpdateBtn" class="btn-custom-primary w-100 disabled" style="pointer-events: none; opacity: 0.6;"><i class="bi bi-check2-circle me-1"></i> Confirm & Update Password</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script to Load Data into Modals -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Profile Modal එකේ Password මාරු කිරීමේ Validation එක
+        const newPwd = document.getElementById('profileNewPassword');
+        const confirmPwd = document.getElementById('profileConfirmPassword');
+        const pwdError = document.getElementById('profilePwdError');
+        const updateBtn = document.getElementById('profileUpdateBtn');
+
+        function validatePasswords() {
+            // Field දෙකම හිස් නම් මුකුත් පෙන්නන්න එපා
+            if (newPwd.value === '' && confirmPwd.value === '') {
+                updateBtn.classList.add('disabled');
+                updateBtn.style.pointerEvents = 'none';
+                updateBtn.style.opacity = '0.6';
+                pwdError.style.display = 'none';
+                confirmPwd.classList.remove('is-invalid', 'is-valid');
+                return;
+            }
+
+            // Password දෙක අසමාන නම්
+            if (newPwd.value !== confirmPwd.value) {
+                updateBtn.classList.add('disabled');
+                updateBtn.style.pointerEvents = 'none';
+                updateBtn.style.opacity = '0.6';
+
+                // Confirm box එකේ මොනවා හරි type කරලා තියෙනවා නම් විතරක් Error එක පෙන්නන්න
+                if (confirmPwd.value !== '') {
+                    pwdError.style.display = 'block';
+                    confirmPwd.classList.add('is-invalid');
+                    confirmPwd.classList.remove('is-valid');
+                }
+            } else {
+                // Password දෙක සමාන නම් Button එක වැඩ කරන්න දෙනවා
+                updateBtn.classList.remove('disabled');
+                updateBtn.style.pointerEvents = 'auto';
+                updateBtn.style.opacity = '1';
+
+                pwdError.style.display = 'none';
+                confirmPwd.classList.remove('is-invalid');
+                confirmPwd.classList.add('is-valid'); // කොළ පාටින් හරි ලකුණක් වැටෙන්න
+            }
+        }
+
+        // Type කරන හැම වෙලාවෙම මේ function එක වැඩ කරන්න දානවා
+        if (newPwd && confirmPwd) {
+            newPwd.addEventListener('input', validatePasswords);
+            confirmPwd.addEventListener('input', validatePasswords);
+        }
+    });
+
+    // Function for Delete Modal
+    function openDeleteTicketModal(btn) {
+        const ticketId = btn.getAttribute('data-id');
+        document.getElementById('confirmDeleteTicketBtn').href = '/student/ticket/delete?id=' + ticketId;
+        new bootstrap.Modal(document.getElementById('deleteTicketConfirmModal')).show();
+    }
+
+    function openEditTicketModal(buttonElement) {
+        document.getElementById('editTicketId').value = buttonElement.getAttribute('data-id');
+        document.getElementById('editTitle').value = buttonElement.getAttribute('data-title');
+        document.getElementById('editDescription').value = buttonElement.getAttribute('data-desc');
+        document.getElementById('editCategory').value = buttonElement.getAttribute('data-cat');
+        document.getElementById('editFaculty').value = buttonElement.getAttribute('data-fac');
+        document.getElementById('editPriority').value = buttonElement.getAttribute('data-priority');
+
+        new bootstrap.Modal(document.getElementById('editTicketModal')).show();
+    }
+
+    function openStudentHistoryModal(btn) {
+        document.getElementById('shTitle').innerText = "Issue: " + btn.getAttribute('data-title');
+
+        var adminResp = btn.getAttribute('data-admin');
+        var adminArea = document.getElementById('shAdminArea');
+        if (adminResp && adminResp.trim() !== '') {
+            adminArea.innerHTML = '<div class="alert shadow-sm mb-4 rounded-3" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);"><i class="bi bi-shield-lock-fill text-danger me-1"></i> <strong>Admin Override Reply:</strong><br>' + adminResp + '</div>';
+        } else {
+            adminArea.innerHTML = '';
+        }
+
+        var rawHistory = btn.getAttribute('data-history');
+        var historyContainer = document.getElementById('shContentArea');
+        historyContainer.innerHTML = '';
+
+        if (rawHistory && rawHistory.trim() !== '') {
+            var replies = rawHistory.split('---SEPARATOR---');
+            replies.forEach(function(reply) {
+                if (reply && reply.trim() !== '') {
+                    var bubble = document.createElement('div');
+                    bubble.className = 'reply-bubble';
+                    bubble.innerText = reply.trim();
+                    historyContainer.appendChild(bubble);
+                }
+            });
+        } else {
+            historyContainer.innerHTML = '<p class="text-muted text-center small fw-medium"><i class="bi bi-hourglass-split"></i> No staff replies appended yet.</p>';
+        }
+
+        new bootstrap.Modal(document.getElementById('studentHistoryModal')).show();
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
