@@ -51,7 +51,7 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(senderEmail, "SLIIT Helpdesk Alert");
-            helper.setTo("sliitadministrator@gmail.com");
+            helper.setTo("youremail");
             helper.setSubject("New Support Ticket Alert - #" + ticketId);
 
             String plainText = "New Ticket Alert: #" + ticketId + " from Student: " + studentId;
